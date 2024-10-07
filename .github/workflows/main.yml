@@ -39,7 +39,7 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
     
-      - name: Output IPs
-        run: |
-          terraform output -json > outputs.json
-          jq -c '.' outputs.json
+      # - name: Output IPs
+      #   run: |
+      #     terraform output -json > outputs.json
+      #     jq -c '.' outputs.json
