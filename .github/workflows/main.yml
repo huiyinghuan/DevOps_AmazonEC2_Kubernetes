@@ -1,48 +1,46 @@
-name: Terraform DigitalOcean Kubernetes
+name: Deploy Kubernetes Infrastructure
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - main 
 
 jobs:
-  terraform:
+  terraform-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 1.9.6  # Or your preferred version
+      - name: Install unzip, curl, and openssh-client
+        run: |
+          apt-get update
+          apt-get install -y unzip curl openssh-client jq
 
-    - name: Set up DigitalOcean CLI
-      run: sudo snap install doctl
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.9.6 
 
-    - name: Authenticate with DigitalOcean
-      run: doctl auth init --access-token ${{ secrets.DO_TOKEN }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2  
 
-    - name: Initialize Terraform
-      run: terraform init
-      working-directory: /Users/huanhuiying/Desktop/DevOps_Docker_Kubernetes/Practical-4  # Use absolute path for testing
+      - name: Terraform Init
+        run: terraform init
 
-    - name: Terraform Plan
-      run: terraform plan
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
     
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve -input=false
-  
-
-    # - name: Verify Kubernetes Setup
-    #   run: |
-    #     kubectl get nodes
-    #     kubectl get svc
-    #   env:
-    #     KUBECONFIG: ${KUBECONFIG}  # Ensure Kubernetes context is set properly
+      - name: Output IPs
+        run: |
+          echo "Master Public IP: $(terraform output master_public_ip)"
+          echo "Worker Public IPs: $(terraform output worker_public_ips)"

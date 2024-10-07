@@ -124,3 +124,12 @@ resource "aws_route_table_association" "k8s_subnet_association" {
 }
 
 
+output "master_public_ip" {
+  description = "Public IP of the master node"
+  value       = aws_instance.k8s_master.public_ip
+}
+
+output "worker_public_ips" {
+  description = "Public IPs of the worker nodes"
+  value       = aws_instance.k8s_worker.*.public_ip
+}
