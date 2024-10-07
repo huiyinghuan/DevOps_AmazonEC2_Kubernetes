@@ -1,0 +1,48 @@
+name: Terraform DigitalOcean Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.9.6  # Or your preferred version
+
+    - name: Set up DigitalOcean CLI
+      run: sudo snap install doctl
+
+    - name: Authenticate with DigitalOcean
+      run: doctl auth init --access-token ${{ secrets.DO_TOKEN }}
+
+    - name: Initialize Terraform
+      run: terraform init
+      working-directory: /Users/huanhuiying/Desktop/DevOps_Docker_Kubernetes/Practical-4  # Use absolute path for testing
+
+    - name: Terraform Plan
+      run: terraform plan
+    
+
+    - name: Terraform Apply
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: terraform apply -auto-approve -input=false
+  
+
+    # - name: Verify Kubernetes Setup
+    #   run: |
+    #     kubectl get nodes
+    #     kubectl get svc
+    #   env:
+    #     KUBECONFIG: ${KUBECONFIG}  # Ensure Kubernetes context is set properly
