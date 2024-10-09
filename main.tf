@@ -78,31 +78,6 @@ resource "aws_instance" "k8s_master" {
     Name = "K8s-Master"
   }
 
-  # Use provisioners to upload and execute your scripts
-  provisioner "file" {
-    source      = "master_install.sh"  # Path to local script
-    destination = "/home/ec2-user/master_install.sh"  # Destination on instance
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = file("~/.ssh/terraform-k8s-key.pem")
-      host        = self.public_ip
-    }
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /home/ec2-user/master_install.sh",
-      "/home/ec2-user/master_install.sh"
-    ]
-    connection {
-      type        = "ssh"
-      user        = "ec2-user"
-      private_key = file("~/.ssh/terraform-k8s-key.pem")
-      host        = self.public_ip
-    }
-  }
-
   #  user_data = file("master_install.sh")
 }
 
