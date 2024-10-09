@@ -80,8 +80,10 @@ jobs:
       - name: Upload and run scripts on master node
         run: |
           # Copy SSH key from GitHub Secrets to the runner
-          # echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/terraform-k8s-key.pem
-          # chmod 600 /tmp/terraform-k8s-key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/terraform-k8s-key.pem
+          chmod 600 /tmp/terraform-k8s-key.pem
+
+          cat /tmp/terraform-k8s-key.pem
 
 
           MASTER_PUBLIC_IP=$(cat master_ip.txt)
