@@ -79,24 +79,18 @@ jobs:
       # Step 8: SSH into EC2 instance and upload files
       - name: Upload and run scripts on master node
         run: |
-          # Copy SSH key from GitHub Secrets to the runner
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/terraform-k8s-key.pem
-          chmod 600 /tmp/terraform-k8s-key.pem
-
-          cat /tmp/terraform-k8s-key.pem
-
-
+          # Use the SSH key directly from GitHub Secrets for scp and ssh
           MASTER_PUBLIC_IP=$(cat master_ip.txt)
           echo "Read Master IP: $MASTER_PUBLIC_IP"
-
+      
           # Upload master_install.sh
-          scp -i ${{ secrets.SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no master_install.sh ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/master_install.sh
-
+          scp -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") -o StrictHostKeyChecking=no master_install.sh ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/master_install.sh
+      
           # Upload deployment.yaml
-          scp -i ${{ secrets.SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no deployment.yaml ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/deployment.yaml
-
+          scp -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") -o StrictHostKeyChecking=no deployment.yaml ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/deployment.yaml
+      
           # Run the script on the master node
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} -o StrictHostKeyChecking=no ec2-user@$MASTER_PUBLIC_IP << EOF
+          ssh -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") -o StrictHostKeyChecking=no ec2-user@$MASTER_PUBLIC_IP << EOF
               chmod +x /home/ec2-user/master_install.sh
               /home/ec2-user/master_install.sh
               kubectl apply -f /home/ec2-user/deployment.yaml
