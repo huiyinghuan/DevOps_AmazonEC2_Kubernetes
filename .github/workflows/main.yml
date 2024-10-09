@@ -74,29 +74,30 @@ jobs:
           MASTER_PUBLIC_IP=$(cat master_ip.txt)
           echo "Read Master IP: $MASTER_PUBLIC_IP"
 
-      
-    
-      # Step 8: SSH into EC2 instance and upload files
       - name: Upload and run scripts on master node
         run: |
-          # Use the SSH key directly from GitHub Secrets for scp and ssh
+          # Create a temporary file for the SSH private key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > temp_key.pem
+          chmod 600 temp_key.pem  # Ensure the key has the right permissions
+      
           MASTER_PUBLIC_IP=$(cat master_ip.txt)
           echo "Read Master IP: $MASTER_PUBLIC_IP"
       
           # Upload master_install.sh
-          scp -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") -o StrictHostKeyChecking=no master_install.sh ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/master_install.sh
+          scp -i temp_key.pem -o StrictHostKeyChecking=no master_install.sh ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/master_install.sh
       
           # Upload deployment.yaml
-          scp -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") -o StrictHostKeyChecking=no deployment.yaml ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/deployment.yaml
+          scp -i temp_key.pem -o StrictHostKeyChecking=no deployment.yaml ec2-user@$MASTER_PUBLIC_IP:/home/ec2-user/deployment.yaml
       
           # Run the script on the master node
-          ssh -i <(echo "${{ secrets.SSH_PRIVATE_KEY }}") -o StrictHostKeyChecking=no ec2-user@$MASTER_PUBLIC_IP << EOF
+          ssh -i temp_key.pem -o StrictHostKeyChecking=no ec2-user@$MASTER_PUBLIC_IP << EOF
               chmod +x /home/ec2-user/master_install.sh
               /home/ec2-user/master_install.sh
               kubectl apply -f /home/ec2-user/deployment.yaml
           EOF
 
-
+          # Clean up the temporary key file
+          rm temp_key.pem
 
       # Step 9: Optionally, you can add a step to output the master/worker IPs
       - name: Output IPs
